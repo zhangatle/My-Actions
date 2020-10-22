@@ -1,7 +1,7 @@
 import requests
-import bilibili
+import sys;
+sys.path.append("My-Actions/function/")
 from bilibili import *
-import re
 import time
 import os
 
@@ -9,7 +9,7 @@ msg = ""
 
 serverJ = os.environ['push_key']
 # 尝试登陆
-b = bilibili.Bilibili()
+b = Bilibili()
 b.login(username=os.environ['BILI_USER'], password=os.environ['BILI_PASS'])
 
 # 获取 Cookie
