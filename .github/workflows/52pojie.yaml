@@ -1,9 +1,9 @@
-name: 爱奇艺会员签到
+name: 吾爱破解签到
 
 on:
   workflow_dispatch:
   schedule:
-    - cron: "5 16 * * *"
+    - cron: "5 23 * * *"
   watch:
     types: [started]
 
@@ -20,11 +20,11 @@ jobs:
       - name: npm install
         run: |
           npm install
-      - name: "运行【爱奇艺会员签到】"
+      - name: "运行【吾爱破解签到】"
         run: |
-          node function/iqiyi.js
+          node function/52pojie.js
         env:
-          iQIYI_COOKIE: ${{ secrets.iQIYI_COOKIE }}
+          WA_COOKIE: ${{ secrets.WA_COOKIE }}
           SEND_KEY: ${{ secrets.SEND_KEY }}
           PUSH_KEY: ${{ secrets.PUSH_KEY }}
           BARK_PUSH: ${{ secrets.BARK_PUSH }}
