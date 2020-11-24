@@ -6,7 +6,7 @@
  */
 
 const $ = new Env('腾讯视频会员签到');
-const notify = $.isNode() ? require('../sendNotify') : '';
+const notify = $.isNode() ? require('./sendNotify') : '';
 let ref_url = ''
 const _cookie = process.env.V_COOKIE
 const SEND_KEY = process.env.SEND_KEY
@@ -23,14 +23,15 @@ const headers = {
  * @description 拼接REF_URL
  */
 if (process.env.V_REF_URL) {
-    if(process.env.V_REF_URL.indexOf('https://access.video.qq.com/user/auth_refresh?') > -1 ) {
+    if(process.env.V_REF_URL.indexOf('https://access.video.qq.com/user/auth_refresh') > -1 ) {
         ref_url = process.env.V_REF_URL
     } else {
-        ref_url = `https://access.video.qq.com/user/auth_refresh?${process.env.V_REF_URL}`
+        console.log("V_REF_URL值填写错误")
     }
     //验证V_REF_URL和cookie是否填写正确
     ref_url_ver()
 } else {
+    //无意义输出方便调试
     console.log("V_REF_URL值填写错误")
 }
 
@@ -63,11 +64,13 @@ function getAuth(c = _cookie) {
     if(_cookie){
         if (_cookie.includes("main_login=wx")) {
             needParams = ["tvfe_boss_uuid","video_guid","video_platform","pgv_pvid","pgv_info","pgv_pvi","pgv_si","_qpsvr_localtk","RK","ptcz","ptui_loginuin","main_login","access_token","appid","openid","vuserid","vusession"]
-        } else {
+        } else if (_cookie.includes("main_login=qq")){
             needParams = ["tvfe_boss_uuid","video_guid","video_platform","pgv_pvid","pgv_info","pgv_pvi","pgv_si","_qpsvr_localtk","RK","ptcz","ptui_loginuin","main_login","vqq_access_token","vqq_appid","vqq_openid","vqq_vuserid","vqq_vusession"]
+        } else {
+            console.log("getAuth - 无法提取有效cookie参数")
         }
     }
-   const obj = {}
+    const obj = {}
     if(c){
         c.split('; ').forEach(t=>{
             const [key, val] = t.split(/\=(.*)$/,2)
@@ -117,8 +120,8 @@ function ref_url_ver(url = ref_url,_cookie) {
                 console.log("验证成功，执行主程序")
                 exports.main()
             } else {
-                console.log("验证ref_url失败,无法获取个人资料 Cookie失效 ‼️‼️")
-                notify.sendNotify("腾讯视频会员签到", '验证ref_url失败,无法获取个人资料 Cookie失效 ‼️‼️');
+                console.log("验证ref_url失败,无法获取个人资料 ref_url或Cookie失效 ‼️‼️")
+                notify.sendNotify("腾讯视频会员签到", '验证ref_url失败,无法获取个人资料 ref_url或Cookie失效 ‼️‼️');
             }
         }
     })
@@ -134,12 +137,8 @@ function txVideoSignIn(headers) {
             console.log("腾讯视频会员签到", "签到请求失败 ‼️‼️", error)
         } else {
             if (data.match(/Account Verify Error/)) {
-                if(SEND_KEY){
-                    notify.sendNotify("腾讯视频会员签到", "签到失败, Cookie失效 ‼️‼️");
-                    console.log("腾讯视频会员签到", "", "签到失败, Cookie失效 ‼️‼️")
-                }else{
-                    console.log("腾讯视频会员签到", "", "签到失败, Cookie失效 ‼️‼️")
-                }
+                notify.sendNotify("腾讯视频会员签到", "签到失败, Cookie失效 ‼️‼️");
+                console.log("腾讯视频会员签到", "", "签到失败, Cookie失效 ‼️‼️")
             } else if (data.match(/checkin_score/)) {
                 msg = data.match(/checkin_score": (.+?),"msg/)[1]
                 //通过分数判断是否重复签到
@@ -159,7 +158,7 @@ function txVideoSignIn(headers) {
                     console.log("腾讯视频会员签到", "", date.getMonth() + 1 + "月" + date.getDate() + "日, " + msg )
                 }
             } else if (data.match(/Not VIP/)) {
-                    console.log("腾讯视频会员签到", "", "非会员无法签到" )
+                console.log("腾讯视频会员签到", "", "非会员无法签到" )
             } else {
                 console.log("腾讯视频会员签到", "", "脚本待更新 ‼️‼️")
                 //输出日志查找原因
@@ -184,7 +183,8 @@ function txVideoDownTask1(headers) {
                 msg = data.match(/score":(.*?)}/)[1]
                 console.log("腾讯视频会员下载任务签到", "", "签到成功，签到分数：" + msg + "分 🎉")
             } else {
-                console.log("腾讯视频会员下载任务签到", "", "签到失败, 任务未完成 ‼️‼️")
+                //console.log("腾讯视频会员下载任务签到", "", "签到失败, 任务未完成 ‼️‼️")
+                console.log("腾讯视频会员下载任务签到", "", data)
             }
         }
     })
@@ -205,7 +205,8 @@ function txVideoDownTask2(headers) {
                 msg = data.match(/score":(.*?)}/)[1]
                 console.log("腾讯视频会员赠送任务签到", "", "签到成功，签到分数：" + msg + "分 🎉")
             } else {
-                console.log("腾讯视频会员赠送任务签到", "", "签到失败, 任务未完成 ‼️‼️")
+                //console.log("腾讯视频会员赠送任务签到", "", "签到失败, 任务未完成 ‼️‼️")
+                console.log("腾讯视频会员赠送任务签到", "", data)
             }
         }
     })
@@ -226,7 +227,8 @@ function txVideoDownTask3(headers) {
                 msg = data.match(/score":(.*?)}/)[1]
                 console.log("腾讯视频会员弹幕任务签到", "", "签到成功，签到分数：" + msg + "分 🎉")
             } else {
-                console.log("腾讯视频会员弹幕任务签到", "", "签到失败, 任务未完成 ‼️‼️")
+                //console.log("腾讯视频会员弹幕任务签到", "", "签到失败, 任务未完成 ‼️‼️")
+                console.log("腾讯视频会员弹幕任务签到", "", data)
             }
         }
     })
@@ -247,7 +249,8 @@ function txVideoDownTask4(headers) {
                 msg = data.match(/score":(.*?)}/)[1]
                 console.log("腾讯视频会员观看任务签到", "", "签到成功，签到分数：" + msg + "分 🎉")
             } else {
-                console.log("腾讯视频会员观看任务签到", "", "签到失败, 任务未完成 ‼️‼️")
+                //console.log("腾讯视频会员观看任务签到", "", "签到失败, 任务未完成 ‼️‼️")
+                console.log("腾讯视频会员观看任务签到", "", data)
             }
         }
     })
